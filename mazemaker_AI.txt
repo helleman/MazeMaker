@@ -1,0 +1,105 @@
+# AI Best Practices for MazeMaker Project
+
+This guide provides practical tips for working effectively with AI tools like Claude Code on the MazeMaker project. It covers how to get the best results from AI assistance and common troubleshooting strategies.
+
+## Best Practices
+
+### 1. Working with AI Prompts
+To get accurate and useful responses from AI:
+
+- **Be specific and provide context**: Instead of \"fix the maze\", say \"Fix the maze generation in maze.py where walls sometimes overlap at line 45\"
+- **Break down complex tasks**: Ask for one step at a time, like \"First, explain how the current solver algorithm works, then suggest improvements\"
+- **Reference existing code**: Mention specific files, functions, or patterns (e.g., \"Follow the same style as the BFS solver in solver.py\")
+- **Ask for verification**: After AI makes changes, request tests or validation steps
+
+### 2. Code Generation Guidelines
+When AI generates code for MazeMaker:
+
+- **Match project style**: Use the same naming conventions (e.g., snake_case for variables, PascalCase for classes)
+- **Keep it simple**: Focus on the exact requirement without adding unnecessary features
+- **Add minimal documentation**: Only comment complex logic, not obvious operations
+- **Include error handling**: Add try-catch blocks for file I/O and user input, but don't overdo it
+
+**Example**: For adding a new maze export feature, AI should create a simple function that saves to .txt format without adding GUI elements unless requested.
+
+### 3. Integration and Testing
+After AI makes changes:
+
+- **Check compatibility**: Ensure new code works with existing files like GUI.py and maze.py
+- **Test incrementally**: Run the program after each major change to catch issues early
+- **Verify security**: Watch for potential issues with file paths or user inputs
+- **Follow project standards**: Maintain consistent indentation (4 spaces) and file organization
+
+## Troubleshooting Common Issues
+
+### Issue 1: Code Doesn't Work as Expected
+
+**Symptoms**: Maze generation fails, solver gets stuck, or GUI crashes.
+
+**Steps to fix**:
+1. Check the console for error messages - they often point to the exact line
+2. Verify input formats match what's expected (e.g., maze dimensions, wall characters)
+3. Test components separately: Run maze.py alone, then solver.py, then GUI.py
+4. Review recent changes - use `git diff` if version control is set up
+
+**Quick check**: Print debug statements to see variable values at key points.
+
+### Issue 2: Integration Problems
+
+**Symptoms**: New features don't work with existing code, imports fail, or functions don't connect properly.
+
+**Steps to fix**:
+1. Ensure new code follows MazeMaker's patterns (e.g., maze representation as 2D lists)
+2. Check for missing imports - look at the top of files like maze.py and solver.py
+3. Verify data structures haven't changed unexpectedly (e.g., maze format, coordinate systems)
+4. Test with sample mazes like test_maze.txt to validate functionality
+
+**Example**: If adding a new solver algorithm, make sure it returns the same path format as the existing BFS solver.
+
+### Issue 3: Performance Issues
+
+**Symptoms**: Large mazes take too long to generate or solve, GUI lags.
+
+**Steps to fix**:
+1. Profile the code to find bottlenecks - focus on nested loops in maze generation
+2. Optimize data structures - use sets for visited cells instead of lists when possible
+3. Consider breaking large operations into smaller chunks for the GUI
+4. Cache results for repeated maze solving if applicable
+
+**Tip**: For maze solving, BFS is already efficient, but very large mazes (100x100+) may need algorithmic improvements.
+
+### Issue 4: Build/Deployment Errors
+
+**Symptoms**: Python import errors, missing modules, or file permission issues.
+
+**Steps to fix**:
+1. Check Python version compatibility (MazeMaker uses Python 3.x)
+2. Verify all required libraries are installed (typically just standard library for this project)
+3. Check file paths - use absolute paths if relative paths cause issues
+4. Run syntax checkers: `python -m py_compile maze.py` to catch basic errors
+
+## Debugging Workflow
+
+Follow these steps when encountering any issue:
+
+1. **Reproduce consistently**: Make the problem happen every time
+2. **Isolate the component**: Test maze generation, solving, and GUI separately
+3. **Check logs**: Look at console output and add print statements if needed
+4. **Use debugging tools**: Python's pdb module or simple print debugging
+5. **Test fixes incrementally**: Change one thing at a time and verify
+6. **Document the solution**: Note what caused the issue for future reference
+
+## When to Ask for Additional Help
+
+Consider reaching out when:
+- Requirements are unclear or keep changing
+- You need to make major architectural decisions (e.g., changing maze representation)
+- Issues persist after following debugging steps
+- Integrating with external libraries or APIs
+- Performance problems affect usability significantly
+
+**Pro tip**: When asking AI for help with persistent issues, provide the exact error message, relevant code snippets, and what you've already tried.
+
+---
+
+*This guide is tailored for the MazeMaker project. Update it as the project evolves.*
