@@ -43,7 +43,7 @@ class MazeGUI:
         ttk.Button(button_frame, text="e) Quit", command=self.root.quit).grid(row=0, column=4, padx=5)
 
         # Canvas for drawing (larger for better scaling)
-        self.canvas = tk.Canvas(self.root, bg='white', width=self.canvas_width, height=self.canvas_height)
+        self.canvas = tk.Canvas(self.root, bg='lightgray', width=self.canvas_width, height=self.canvas_height)
         self.canvas.grid(row=1, column=0, padx=10, pady=10, sticky=(tk.N, tk.S, tk.E, tk.W))
 
         # Bind resize event
@@ -129,11 +129,11 @@ class MazeGUI:
             if rows < 1 or cols < 1:
                 raise ValueError("Dimensions must be positive integers")
 
-            filename = simpledialog.askstring("Save Maze", "Enter filename (e.g., mymaze.txt):")
+            filename = simpledialog.askstring("Save Maze", "Enter filename (e.g., mymaze.maze):")
             if not filename:
                 return
-            if not filename.endswith('.txt'):
-                filename += '.txt'
+            if not filename.endswith('.maze'):
+                filename += '.maze'
 
             # Generate maze
             self.maze_grid = generate_maze(rows, cols)
@@ -161,7 +161,7 @@ class MazeGUI:
     def solve_maze(self):
         filename = filedialog.askopenfilename(
             title="Select Maze File",
-            filetypes=[("Text files", "*.txt"), ("All files", "*.*")]
+            filetypes=[("Maze files", "*.maze"), ("All files", "*.*")]
         )
         if not filename:
             return
@@ -182,8 +182,8 @@ class MazeGUI:
             self.animate_solve()
 
             # Save solved
-            base_name = os.path.basename(filename)
-            solved_filename = f"solved_{base_name}"
+            base_name = os.path.splitext(os.path.basename(filename))[0]
+            solved_filename = f"solved_{base_name}.maze"
             self.solved_grid = [row[:] for row in self.maze_grid]
             for r, c in self.path:
                 self.solved_grid[r][c] = '*'
@@ -217,7 +217,7 @@ class MazeGUI:
                 self.root.after(0, lambda: self.draw_maze(self.maze_grid, solved=False))
 
                 # Wait a moment for redraw
-                self.root.after(500, lambda: None)
+                self.root.after(100, lambda: None)
 
                 for idx, (r, c) in enumerate(self.path):
                     if not self.animating:
@@ -260,7 +260,7 @@ class MazeGUI:
 
     def list_mazes(self):
         try:
-            files = [f for f in os.listdir('.') if f.endswith('.txt')]
+            files = [f for f in os.listdir('.') if f.endswith('.maze')]
             solved_files = [f for f in files if f.startswith('solved_')]
             maze_files = [f for f in files if not f.startswith('solved_')]
 
@@ -270,13 +270,13 @@ class MazeGUI:
             if maze_files:
                 text += "Maze files (unsolved):\n"
                 for f in sorted(maze_files):
-                    text += f"  📄 {f}\n"
+                    text += f"  - {f}\n"
                 text += "\n"
 
             if solved_files:
                 text += "Solved mazes:\n"
                 for f in sorted(solved_files):
-                    text += f"  ⭐ {f}\n"
+                    text += f"  * {f}\n"
 
             list_window = tk.Toplevel(self.root)
             list_window.title("Mazes on Disk")
@@ -293,16 +293,6 @@ class MazeGUI:
             scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
             text_widget.insert(tk.END, text)
-
-            # Highlight solved files
-            for solved in solved_files:
-                start = text_widget.search(solved, 1.0, stopindex=tk.END)
-                while start:
-                    end = f"{start}+1l"
-                    text_widget.tag_add("highlight", start, end)
-                    start = text_widget.search(solved, end, stopindex=tk.END)
-
-            text_widget.tag_config("highlight", background="lightyellow", foreground="darkgreen")
             text_widget.config(state=tk.DISABLED)
 
         except Exception as e:
@@ -311,7 +301,7 @@ class MazeGUI:
     def display_maze(self):
         filename = filedialog.askopenfilename(
             title="Select Maze File",
-            filetypes=[("Text files", "*.txt"), ("All files", "*.*")]
+            filetypes=[("Maze files", "*.maze"), ("All files", "*.*")]
         )
         if not filename:
             return
@@ -349,41 +339,31 @@ class MazeGUI:
 
         # Draw background
         self.canvas.create_rectangle(0, 0, self.canvas_width, self.canvas_height,
-                                   fill='white', outline='white')
+                                   fill='lightgrey', outline='lightgray')
 
-        # Draw maze elements
+        # Draw maze as solid regions (no thin lines)
         for i in range(self.height):
             for j in range(self.width):
                 char = grid[i][j]
-                x = offset_x + j * cell_size
-                y = offset_y + i * cell_size
+                x1 = offset_x + j * cell_size
+                y1 = offset_y + i * cell_size
+                x2 = x1 + cell_size
+                y2 = y1 + cell_size
 
-                # Draw walls
-                if char == '-':  # Horizontal wall
-                    self.canvas.create_line(
-                        x, y, x + cell_size, y,
-                        width=max(2, int(cell_size // 8)),
-                        fill='black', capstyle=tk.ROUND, tags="wall"
-                    )
-                elif char == '|':  # Vertical wall
-                    self.canvas.create_line(
-                        x, y, x, y + cell_size,
-                        width=max(2, int(cell_size // 8)),
-                        fill='black', capstyle=tk.ROUND, tags="wall"
-                    )
-                elif char == '.':  # Junction
-                    cx = x + cell_size / 2
-                    cy = y + cell_size / 2
-                    radius = max(2, int(cell_size // 12))
-                    self.canvas.create_oval(
-                        cx - radius, cy - radius, cx + radius, cy + radius,
-                        fill='black', outline='black', tags="wall"
-                    )
-                elif char == ' ':  # Path space
-                    # Draw path background
+                # WALLS: Solid black rectangles for all wall characters
+                if char in '#-|.':  # All wall types become solid black
                     self.canvas.create_rectangle(
-                        x + 1, y + 1, x + cell_size - 1, y + cell_size - 1,
-                        fill='lightgreen', outline='', tags="path"
+                        x1, y1, x2, y2,
+                        fill='black', outline='black',
+                        width=1, tags="wall"
+                    )
+
+                # PATHS: Solid white rectangles for open spaces
+                elif char == ' ':  # Open path
+                    self.canvas.create_rectangle(
+                        x1, y1, x2, y2,  # Full cell - no gaps
+                        fill='white', outline='white',
+                        tags="path"
                     )
 
         # Draw special markers (S, F, *)
@@ -394,34 +374,76 @@ class MazeGUI:
                     cx = offset_x + j * cell_size + cell_size / 2
                     cy = offset_y + i * cell_size + cell_size / 2
 
-                    marker_size = cell_size * 0.4  # 40% of cell size
+                    marker_size = cell_size * 0.9  # 90% of cell size
                     outline_width = max(1, int(marker_size // 8))
 
                     if char == 'S':
-                        # Green start marker
+                        # Start marker - Green "S" with background
+                        # White path background for S (ensure white shows through)
+                        self.canvas.create_rectangle(
+                            cx - marker_size/2, cy - marker_size/2,
+                            cx + marker_size/2, cy + marker_size/2,
+                            fill='white', outline='white',
+                            tags="path_marker_bg"
+                        )
+                        # Green outline circle (no fill)
                         self.canvas.create_oval(
                             cx - marker_size/2, cy - marker_size/2,
                             cx + marker_size/2, cy + marker_size/2,
-                            fill='limegreen', outline='darkgreen',
-                            width=outline_width, tags="marker"
+                            fill='', outline='limegreen',
+                            width=max(4, int(marker_size // 5)), tags="marker"
                         )
-                        # Add S label
+                        # Add bold S label on top
                         self.canvas.create_text(
-                            cx, cy, text="S", font=('Arial', max(8, int(marker_size/4)), 'bold'),
-                            fill='white', tags="marker"
+                            cx, cy, text="S",
+                            font=('Arial', max(16, int(marker_size/2)), 'bold'),
+                            fill='black', tags="marker_text"
                         )
+                        # Add subtle arrow indicator (pointing right)
+                        arrow_size = marker_size * 0.3
+                        self.canvas.create_polygon(
+                            cx + marker_size/4, cy,
+                            cx + marker_size/4 + arrow_size, cy - arrow_size/3,
+                            cx + marker_size/4 + arrow_size, cy + arrow_size/3,
+                            fill='darkgreen', outline='darkgreen',
+                            tags="marker"
+                        )
+
                     elif char == 'F':
-                        # Red finish marker
+                        # Finish marker - Red "F" with background and checkmark
+                        # White path background for F (ensure white shows through)
+                        self.canvas.create_rectangle(
+                            cx - marker_size/2, cy - marker_size/2,
+                            cx + marker_size/2, cy + marker_size/2,
+                            fill='white', outline='white',
+                            tags="path_marker_bg"
+                        )
+                        # Red outline circle (no fill)
                         self.canvas.create_oval(
                             cx - marker_size/2, cy - marker_size/2,
                             cx + marker_size/2, cy + marker_size/2,
-                            fill='red', outline='darkred',
-                            width=outline_width, tags="marker"
+                            fill='', outline='red',
+                            width=max(4, int(marker_size // 5)), tags="marker"
                         )
-                        # Add F label
+                        # Add bold F label on top
                         self.canvas.create_text(
-                            cx, cy, text="F", font=('Arial', max(8, int(marker_size/4)), 'bold'),
-                            fill='white', tags="marker"
+                            cx, cy, text="F",
+                            font=('Arial', max(16, int(marker_size/2)), 'bold'),
+                            fill='black', tags="marker_text"
+                        )
+                        # Add checkmark indicator
+                        check_size = marker_size * 0.25
+                        # Red checkmark accent on white path
+                        check_size = marker_size * 0.2
+                        self.canvas.create_line(
+                            cx + marker_size/4, cy - check_size/2,
+                            cx + marker_size/4 + check_size, cy + check_size/2,
+                            fill='red', width=3, tags="marker_check"
+                        )
+                        self.canvas.create_line(
+                            cx + marker_size/4 + check_size, cy + check_size/2,
+                            cx + marker_size/4 + check_size * 1.5, cy,
+                            fill='red', width=3, tags="marker_check"
                         )
                     elif char == '*' and solved:
                         # Blue path marker
@@ -453,13 +475,17 @@ class MazeGUI:
             font=('Arial', 9), fill='darkgray', tags="info"
         )
 
-        # Ensure proper layer ordering
-        self.canvas.tag_lower("wall")
-        self.canvas.tag_raise("path")
-        self.canvas.tag_raise("marker")
-        self.canvas.tag_raise("path_marker")
-        self.canvas.tag_raise("border")
-        self.canvas.tag_raise("info")
+        # Layer ordering - Ensure white path backgrounds for markers
+        self.canvas.tag_lower("wall")  # Black walls bottom
+        self.canvas.tag_raise("path")  # White paths first
+        self.canvas.tag_raise("path_marker_bg")  # White backgrounds for S/F
+        self.canvas.tag_raise("marker")  # Colored outlines
+        self.canvas.tag_raise("marker_arrow")  # Green arrow
+        self.canvas.tag_raise("marker_check")  # Red checkmark
+        self.canvas.tag_raise("marker_text")  # Black S/F text on top
+        self.canvas.tag_raise("path_marker")  # Blue solution dots
+        self.canvas.tag_raise("border")  # Gray border
+        self.canvas.tag_raise("info")  # Info text
 
     def stop_animation(self):
         """Stop current animation"""

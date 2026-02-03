@@ -9,7 +9,7 @@ def read_maze(filename: str) -> Tuple[List[List[str]], int, int]:
     """Read and validate maze file from disk
 
     Args:
-        filename: Path to maze file (.txt format)
+        filename: Path to maze file (.maze format)
 
     Returns:
         Tuple of (grid: List[List[str]], height: int, width: int)
@@ -246,14 +246,14 @@ def main():
     Usage: ./solver.py <maze_file>
 
     Args:
-        sys.argv[1]: Path to maze file (.txt)
+        sys.argv[1]: Path to maze file (.maze)
 
     Returns:
         Exit code 0 on success, 1 on error
     """
     if len(sys.argv) != 2:
         print("Usage: ./solver.py <maze_file>")
-        print("Example: ./solver.py mymaze.txt")
+        print("Example: ./solver.py mymaze.maze")
         sys.exit(1)
 
     filename = sys.argv[1]
@@ -290,7 +290,7 @@ def main():
 
         # Save solved maze
         base_name = os.path.splitext(os.path.basename(filename))[0]
-        solved_filename = f"solved_{base_name}.txt"
+        solved_filename = f"solved_{base_name}.maze"
 
         with open(solved_filename, 'w', encoding='utf-8') as f:
             f.write('\n'.join(''.join(row) for row in grid))
@@ -307,7 +307,7 @@ def main():
     except ValueError as e:
         print(f"❌ Validation Error: {e}")
         print("The maze file appears to be invalid or unsolvable.")
-        print("Generate a new maze using: ./maze.py 10 10 maze.txt")
+        print("Generate a new maze using: ./maze.py 10 10 maze.maze")
         sys.exit(1)
 
     except Exception as e:

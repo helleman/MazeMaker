@@ -177,7 +177,7 @@ def main():
     """
     if len(sys.argv) < 3:
         print("Usage: ./maze.py <rows> <cols> [output_file]")
-        print("Example: ./maze.py 10 10 mymaze.txt")
+        print("Example: ./maze.py 10 10 mymaze.maze")
         sys.exit(1)
 
     try:
@@ -187,7 +187,7 @@ def main():
     except (ValueError, IndexError):
         print("Usage: ./maze.py <rows> <cols> [output_file]")
         print("Error: Rows and columns must be positive integers.")
-        print("Example: ./maze.py 10 10 mymaze.txt")
+        print("Example: ./maze.py 10 10 mymaze.maze")
         sys.exit(1)
 
     try:
